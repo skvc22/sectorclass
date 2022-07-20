@@ -7,6 +7,7 @@ Created on Mon Jun 13 13:48:45 2022
 """
 
 import argparse,glob,re,sys,os,time,copy,math
+from xxlimited import new
 from pdastro import pdastroclass,pdastrostatsclass,makepath4file,unique,AnotB,AorB,AandB,rmfile
 import yaml
 import pandas as pd
@@ -14,6 +15,7 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from tessreduce import sn_lookup
+import requests
 
 coords = pd.DataFrame()
 
@@ -59,7 +61,7 @@ class sectorclass(pdastroclass):
 
         parser.add_argument('-v','--verbose', default=0, action='count')
 
-        parser.add_argument('--outputFile', default=None, help='output file. default is None.')
+        parser.add_argument('--outputfile', default=None, help='output file. default is None.')
 
         return(parser)
 
@@ -165,19 +167,26 @@ class sectorclass(pdastroclass):
     def readInTables(self):
         """
         Read the tables on each year's observation page on the Tess website into the
-        global DataFrame coords. Drop the Dates and Sector columns for redundancy, as
-        well as the Spacecraft column, because the relevant coordinates are where the 
-        cameras targeted. 
+        global DataFrame coords, looping through until the pages no longer exist to account
+        for updates. Drop the Dates and Sector columns for redundancy, as well as the S
+        pacecraft column, because the relevant coordinates are where the cameras targeted. 
         """
         global coords
-
-        for i in range(1,6):
+        exists = True
+        i = 1
+        
+        while exists == True:
             link = "http://tess.mit.edu/tess-year-"+str(i)+"-observations/"
 
             raw = pd.read_html(link)
             temp = raw[0].drop(['Dates','Spacecraft','Sector'], axis=1)
 
             coords = pd.concat([coords, temp], axis=0)
+
+            i += 1 
+            response = requests.get("http://tess.mit.edu/tess-year-"+str(i)+"-observations/")
+            if response.status_code != 200:
+                exists = False
 
         coords = coords.loc[:, ~coords.columns.str.contains('^Unnamed')]
         coords = coords.drop_duplicates()
@@ -188,7 +197,12 @@ class sectorclass(pdastroclass):
         Split the columns for cameras 1-4 by comma into columns for the RA, Dec, and Roll. 
         Save those columns in a temporary DataFrame, and concatenate it vertically with a 
         second temporary DataFrame. Reorganize the rows to be grouped by sector, with each 
-        sector containing four cameras, and save this to coords. Merge coords and self.t.
+        sector containing four cameras, and save this to coords. 
+        
+        Replicate rows as necessary to allow for a successful merge of the two dataframes:
+        self.t originally has one row per orbit and thus two per sector, and coords has 
+        one row per camera and thus four per sector. Merge rather than concatenate to ensure 
+        both lists are the same length and prevent NaNs in the final result.
         """
         self.readInTables()
         global coords
@@ -202,24 +216,19 @@ class sectorclass(pdastroclass):
             temp = temp[['Camera','Central RA','Central Dec','Roll']]
             newDF = pd.concat([newDF, temp], axis=0)
 
-        coords = newDF.iloc[::69, :]
+        rows = len(coords)
 
-        for i in range(1,69):
-            coords = pd.concat([coords, newDF.iloc[i::69, :]])
+        coords = newDF.iloc[::rows, :]
+        coords = pd.concat([coords, coords])
 
+        for i in range(1,rows):
+            coords = pd.concat([coords, newDF.iloc[i::rows, :]])
+            coords = pd.concat([coords, newDF.iloc[i::rows, :]])
         coords.index = range(len(coords.index))
 
-        """
-        Duplicate every value in coords and repeat four times every value in self.t to allow 
-        for a successful merge of the two, with self.t originally having one row per orbit and
-        thus two per sector, and coords having one row per camera and thus four per sector.
-        Merge rather than concatenate to ensure both lists are the same length and prevent NaNs 
-        in the final result. 
-        """
-        coords = pd.DataFrame(np.repeat(coords.values, 2, axis=0), columns=coords.columns)
         self.t = pd.DataFrame(np.repeat(self.t.values, 4, axis=0), columns=self.t.columns)
         self.t = pd.merge(self.t, coords, left_index=True, right_index=True)
-    
+
     def getSeparation(self, inputra, inputdec, maxSep=17, sepcol='Separation'):
         """
         Create two skycoord objects, one for the input coordinates and one for each row
@@ -285,8 +294,8 @@ if __name__ == '__main__':
         print(test.getSeparation(snListDF.iloc[i]['RA'], snListDF.iloc[i]['Dec']))
 
     # display the dataframe in the file passed as the output file
-    if test.params['outputFile'] is not None:
-        f = open(test.params['outputFile'], "w")
+    if test.params['outputfile'] is not None:
+        f = open(test.params['outputfile'], "w")
         f.write(test.t.to_string())
         f.close()
     
