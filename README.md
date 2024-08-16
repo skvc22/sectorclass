@@ -38,8 +38,8 @@
 ###  File formats 
 - snlist.csv must have 3 columns named SNid, RA, and Dec respectively.
 
-  SNid | RA  |  Dec
---- | --- |  ---
+SNid    | RA  | Dec
+------- | --- |  ---
 2020ghq | 221.335125 | 38.738419
 2020oat | 349.604917 | 58.444131
 2017fdl | 325.99489958 | -11.3445704648
