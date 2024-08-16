@@ -33,7 +33,7 @@
 
 #### Example commands
 - Check if TESS observed given supernovae near its discovery date: `./sector.py -i snlist.csv -o`output.csv
-- Update the sectorlist.csv file: `./sector.py --sectoroutput newsectors.csv -u
+- Update the sectorlist.csv file: `./sector.py --sectoroutput newsectors.csv -u`
 
 ###  File formats 
 - snlist.csv must have 3 columns named SNid, RA, and Dec respectively.
