@@ -494,5 +494,5 @@ if __name__ == '__main__':
 
     if test.params['update']:
         test.update()
-
-    test.populate_secs4SNe()
+    else: 
+        test.populate_secs4SNe()
