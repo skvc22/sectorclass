@@ -36,18 +36,19 @@
 - Update the sectorlist.csv file: `./sector.py --sectoroutput newsectors.csv -u
 
 ###  File formats 
-- snlist.csv must have 3 columns named SNid, RA, and Dec respectively. 
-  SNid   RA    Dec
-=====  =====  ======
-2020ghq 221.335125 38.738419
-2020oat 349.604917 58.444131
-2017fdl 325.99489958 -11.3445704648
-2019vxm 299.618917 62.137731
-2019yvr 191.283897036 -0.459120025663
-2017gjn 40.951792 32.526069
-2020jfo 185.460333 4.481681
-2017glq 221.335125 38.738419
-=====  =====  ======
+- snlist.csv must have 3 columns named SNid, RA, and Dec respectively.
+
+  SNid | RA  |  Dec
+--- | --- |  ---
+2020ghq | 221.335125 | 38.738419
+2020oat | 349.604917 | 58.444131
+2017fdl | 325.99489958 | -11.3445704648
+2019vxm | 299.618917 | 62.137731
+2019yvr | 191.283897036 | -0.459120025663
+2017gjn | 40.951792 | 32.526069
+2020jfo | 185.460333 | 4.481681
+2017glq | 221.335125 | 38.738419
+
 - an output file will contain columns SNid, RA, Dec, Sector, Orbit, Orbit_Start, Orbit_End, Camera, Cam_RA, Cam_Dec, Cam_Roll, ID, Covers, MJD_Difference, where Covers is true if TESS observed the supernova on or around its discovery date.
 
 ## Dependencies
